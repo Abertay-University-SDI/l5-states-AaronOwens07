@@ -28,6 +28,12 @@ void Player::handleInput(float dt)
 		setPosition({ 50,0 });
 		m_velocity = { 0,0 };
 	}
+
+	if (m_input->isKeyDown(sf::Keyboard::Scancode::Space) && m_isOnGround)
+	{
+		m_velocity.y -= JUMP_FORCE;
+		m_isOnGround = false;
+	}
 }
 
 void Player::update(float dt)
@@ -35,10 +41,36 @@ void Player::update(float dt)
 	// newtonian model
 	m_acceleration.y += GRAVITY;
 	m_velocity += dt * m_acceleration;
+	m_oldPosition = getPosition();
 	move(m_velocity);
 }
 
 void Player::collisionResponse(GameObject& collider)
 {
+	sf::FloatRect pCol = getCollisionBox();
+	sf::FloatRect colCol = collider.getCollisionBox();
+	auto overlap = pCol.findIntersection(colCol);
+	if (!overlap) return;
+
+	float oldBottom = m_oldPosition.y + pCol.size.y;
+	float tileTop = colCol.position.y;
+
 	
+	if (oldBottom <= tileTop)
+	{
+		if (m_velocity.y > 0)
+		{
+			m_isOnGround = true;
+			m_velocity.y = 0;
+			setPosition({ getPosition().x, getPosition().y - overlap->size.y });
+		}
+	}
+	else
+	{
+		m_velocity.x *= -COEF_RESTITUTION; 
+		if (pCol.position.x < colCol.position.x)
+			setPosition({ getPosition().x - overlap->size.x, getPosition().y });
+		else
+			setPosition({ getPosition().x + overlap->size.x, getPosition().y });
+	}
 }

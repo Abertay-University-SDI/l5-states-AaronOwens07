@@ -23,4 +23,8 @@ private:
 
 	Player m_player;
 
+	sf::Texture m_tileTexture;
+	sf::RectangleShape m_flag;
+	sf::RectangleShape m_switch;
+
 };
